@@ -10,15 +10,15 @@ import adminRoutes from './routes/adminRoutes.js'
 dotenv.config()
 
 const app = express()
-const PORT = 3000
-const CONNECT_MONGO = process.env.MONGO_URL
+const PORT = process.env.PORT
+const CONNECT_MONGO = process.env.MONGO_URL || 8080
 
 mongoose.connect(CONNECT_MONGO)
     .then(() => console.log('Mongo connected'))
     .catch(err => console.log('Error with connect ' + err))
 
 
-app.use(cors({ origin: "http://localhost:5173", credentials: true }))
+app.use(cors({ origin: ["http://localhost:5173", process.env.CLIENT_URL] , credentials: true }))
 app.use(express.json())
 
 
