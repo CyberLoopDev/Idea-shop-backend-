@@ -1,7 +1,5 @@
 import productModel from "../models/productModel.js";
 
-
-
 const allowedCategories = [
   "Для девочек",
   "Для мальчиков",
@@ -18,6 +16,24 @@ const allowedCategories = [
   "Акции",
   "Популярное",
 ];
+
+
+const categoryMap = {
+  girls: "Для девочек",
+  boys: "Для мальчиков",
+  newborn: "Для новорожденных",
+  stationery: "Канцелярия",
+  accessories: "Аксессуары",
+  sport: "Спорт",
+  games: "Настольные игры",
+  strollers: "Коляски",
+  development: "Развитие",
+  constructors: "Конструкторы",
+  hits: "Хиты",
+  new: "Новинки",
+  sale: "Акции",
+  popular: "Популярное",
+};
 
 export async function getAllProducts(req, res) {
   try {
@@ -40,53 +56,59 @@ export async function getAllProducts(req, res) {
       limit = 10,
     } = req.query;
 
-   
     const query = {};
 
-    if(search){
-     query.name = { $regex: search, $options: "i" };
+   
+    if (search) {
+      query.name = { $regex: search, $options: "i" };
     }
 
-   
-    if (category && allowedCategories.includes(category)) {
-      query.category = category;
+    
+    if (category) {
+      const normalizedCategory = categoryMap[category] || category;
+
+      if (allowedCategories.includes(normalizedCategory)) {
+        query.category = normalizedCategory;
+      }
     }
 
    
     if (name) {
-      query.name = { $regex: name, $options: "i" }; 
+      query.name = { $regex: name, $options: "i" };
     }
 
-
-  
+   
     if (minPrice || maxPrice) {
       query.price = {};
       if (minPrice) query.price.$gte = Number(minPrice);
       if (maxPrice) query.price.$lte = Number(maxPrice);
     }
 
-    if(color){
-      query['characteristics.color'] = { $regex: color, $options: "i" };
+    
+    if (color) {
+      query["characteristics.color"] = { $regex: color, $options: "i" };
     }
+
     
     if (tags) {
       const tagsArray = tags.split(",").map((tag) => tag.trim());
       query.tags = { $in: tagsArray.map((tag) => new RegExp(`^${tag}$`, "i")) };
     }
 
+    
     if (material) {
       query["characteristics.material"] = material;
     }
 
-  
+    
     if (country_of_origin) {
       query["characteristics.country_of_origin"] = country_of_origin;
     }
 
-   
+    
     if (minWeight || maxWeight) {
       query["characteristics.weight"] = {};
-      if (minWeight) query["characteristics.weight"].$gte = minWeight + " kg"; 
+      if (minWeight) query["characteristics.weight"].$gte = minWeight + " kg";
       if (maxWeight) query["characteristics.weight"].$lte = maxWeight + " kg";
     }
 
@@ -97,11 +119,10 @@ export async function getAllProducts(req, res) {
       if (maxRating) query.rating.$lte = Number(maxRating);
     }
 
-    
     const skip = (page - 1) * limit;
     let queryBuilder = productModel.find(query);
 
-    
+   
     if (sort) {
       const sortOptions = {
         "price-asc": { price: 1 },
@@ -111,21 +132,21 @@ export async function getAllProducts(req, res) {
         "name-asc": { name: 1 },
         "name-desc": { name: -1 },
       };
-      queryBuilder = queryBuilder.sort(sortOptions[sort] || { _id: 1 }); 
+      queryBuilder = queryBuilder.sort(sortOptions[sort] || { _id: 1 });
     }
 
+    
     const products = await queryBuilder.skip(skip).limit(Number(limit));
 
-    
     const totalProducts = await productModel.countDocuments(query);
     const totalPages = Math.ceil(totalProducts / limit);
 
     if (products.length === 0) {
-      return res
-        .status(404)
-        .json({ type: "not found", message: "Товар с такими фильтрами не найден" });
+      return res.status(404).json({
+        type: "not found",
+        message: "Товар с такими фильтрами не найден",
+      });
     }
-    
 
     res.json({
       products,
@@ -142,19 +163,14 @@ export async function getAllProducts(req, res) {
   }
 }
 
+export const getProductsById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ type: "Введите id" });
 
-export const getProductsById = async(req, res) => {
-  try{
-    const { id } = req.params
-    if(!id) return res.status(400).json({ type: "Введите id" })
-    const product = await productModel.findById(id)
-  return res.status(200).json(product)
-  } catch(err){
-    return res.status(500).json({ type: 'error' })
+    const product = await productModel.findById(id);
+    return res.status(200).json(product);
+  } catch (err) {
+    return res.status(500).json({ type: "error" });
   }
-}
-
-
-
-
- 
+};
