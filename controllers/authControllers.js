@@ -223,6 +223,8 @@ export const setNewPassword = async(req, res) => {
 }
 
 
+
+
 export const updateUser = async (req, res) => {
   try {
     const userId = req.user.id; 
@@ -232,17 +234,29 @@ export const updateUser = async (req, res) => {
       return res.status(400).json({ type: "error", message: "Заполните все обязательные поля" });
     }
 
+   
+    const existingUser = await userModel.findOne({ gmail });
+    if (existingUser && existingUser._id.toString() !== userId) {
+      return res.status(400).json({ type: "error", message: "Email уже используется" });
+    }
+
     const updateData = { full_name, phone, gmail };
 
     
-    if (password) {
+    if (password && password.trim() !== "") {
       const hashedPassword = await bcrypt.hash(password, 10);
       updateData.password = hashedPassword;
     }
 
-    const updatedUser = await userModel.findByIdAndUpdate(userId, updateData, { new: true });
+    
+    const updatedUser = await userModel.findByIdAndUpdate(
+      userId,
+      updateData,
+      { new: true }
+    ).select("-password");
 
-    return res.status(200).json({ type: "success", user: updatedUser });
+    res.status(200).json({ type: "success", user: updatedUser });
+
   } catch (err) {
     console.error("Ошибка при обновлении профиля:", err);
     res.status(500).json({ type: "error", message: "Ошибка сервера" });
