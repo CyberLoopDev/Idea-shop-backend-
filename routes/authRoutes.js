@@ -14,7 +14,7 @@ router.patch('/complete_profile', completeProfile)
 router.post('/restore_password', resetPassword)
 router.post('/restore_password/verify', verifyResetCode)
 router.post('/restore_password/new', setNewPassword)
-router.put('update-user', verifyToken, updateUser)
+router.put('/update-user', verifyToken, updateUser)
 
 
 export default router
