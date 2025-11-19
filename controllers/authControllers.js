@@ -232,7 +232,7 @@ export const updateUser = async (req, res) => {
       return res.status(400).json({ type: "error", message: "Заполните все обязательные поля" });
     }
 
-    const updateData = { full_name, phone, email };
+    const updateData = { full_name, phone, gmail };
 
     
     if (password) {
